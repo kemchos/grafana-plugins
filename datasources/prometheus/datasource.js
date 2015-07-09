@@ -115,8 +115,16 @@ function (angular, _, kbn) {
     };
 
     PrometheusDatasource.prototype.metricFindQuery = function(query) {
+      var interpolated;
+      try {
+        interpolated = templateSrv.replace(query);
+      }
+      catch (err) {
+        return $q.reject(err);
+      }
+
       var options;
-      var matches = query.match(/^[a-zA-Z_:*][a-zA-Z0-9_:*]*/);
+      var matches = interpolated.match(/^[a-zA-Z_:*][a-zA-Z0-9_:*]*/);
 
       if (matches != null && matches[0].indexOf('*') >= 0) {
         // if query has wildcard character, return metric name list
@@ -144,7 +152,7 @@ function (angular, _, kbn) {
         // if query contains full metric name, return metric name and label list
         options = {
           method: 'GET',
-          url: this.url + '/api/query?expr=' + encodeURIComponent(query),
+          url: this.url + '/api/query?expr=' + encodeURIComponent(interpolated),
         };
 
         return $http(options)
